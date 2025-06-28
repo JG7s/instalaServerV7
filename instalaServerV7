@@ -1,0 +1,150 @@
+#!/bin/bash
+set -e
+
+IP_ZABBIX_BANCO="" #COLOCAR IP DA VM DO BANCO DE DADOS DO ZABBIX
+
+
+# Instala Zabbix Server 7.0 LTS para banco de dados PostegreeSQL no Debian 12
+
+echo ####################################################
+echo # "Atualizando arquivo /etc/apt/source.list" #######
+echo ####################################################
+
+
+sed -i 's|deb http://deb.debian.org/debian/ bookworm main non-free-firmware|& contrib non-free|' /etc/apt/sources.list
+sed -i 's|deb-src http://deb.debian.org/debian/ bookworm main non-free-firmware|& contrib non-free|' /etc/apt/sources.list
+sed -i 's|deb http://security.debian.org/debian-security bookworm-security main non-free-firmware|& contrib non-free|' /etc/apt/sources.list
+sed -i 's|deb-src http://security.debian.org/debian-security bookworm-security main non-free-firmware|& contrib non-free|' /etc/apt/sources.list
+sed -i 's|deb http://deb.debian.org/debian/ bookworm-updates main non-free-firmware|& contrib non-free|' /etc/apt/sources.list
+sed -i 's|deb-src http://deb.debian.org/debian/ bookworm-updates main non-free-firmware|& contrib non-free|' /etc/apt/sources.list
+
+echo "Atualizando Linux"
+apt update
+apt upgrade -y
+apt update
+
+
+echo "Tunning no Kernel"
+apt install firmware-linux firmware-linux-free firmware-linux-nonfree -y
+
+echo "Instalando o chrony"
+apt install -y chrony
+systemctl enable --now chrony
+systemctl start chronyd
+
+#timedatectl set-timezone America/Manaus
+
+apt-get install vim wget curl tcpdump perl sshpass telnet gnupg gnupg2 apt-transport-https sudo nmap snmpd snmp snmptrapd libsnmp-perl perl libxml-simple-perl snmp-mibs-downloader python3-pip libsnmp-dev build-essential bash-completion htop traceroute software-properties-common expect fping -y
+wget remontti.com.br/debian; bash debian; su -
+
+apt update
+
+reboot
+
+### Precisa instalar o agente do PostegreeSQL zabbix server
+
+sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+
+apt update; apt install postgresql-client-16 -y
+
+
+## Instalação do NGINX ##
+
+apt -y install nginx
+sed -i 's/# server_tokens/server_tokens/' /etc/nginx/nginx.conf
+systemctl restart nginx
+
+## Instalação PHP 8 ##
+
+apt -y install --no-install-recommends \
+php php-{fpm,cli,mysql,pear,gd,gmp,bcmath,mbstring,curl,xml,zip,json,pgsql}
+
+
+nano /etc/php/8.2/fpm/php.ini
+
+# Localize max_execution_time e altere para 600 e upload_max_filesize para 100MB
+max_execution_time = 600
+upload_max_filesize = 100M
+
+## Reinicie o serviço do PHP.
+
+systemctl restart php8.2-fpm
+
+echo "############## Adicionado as permissões do Zabbix Server no sudo visudo  ##############"
+
+echo 'zabbix ALL=(ALL:ALL) NOPASSWD:/usr/bin/nmap' | sudo tee -a /etc/sudoers
+echo 'zabbix ALL=(ALL:ALL) NOPASSWD:/usr/lib/zabbix/externalscripts' | sudo tee -a /etc/sudoers
+
+
+#Instala Zabbix Server
+
+echo "############## Instalando Zabbix Server ##############"
+
+wget https://repo.zabbix.com/zabbix/7.0/debian/pool/main/z/zabbix-release/zabbix-release_7.0-2+debian12_all.deb
+dpkg -i zabbix-release_7.0-2+debian12_all.deb
+apt update -y
+
+apt install zabbix-server-pgsql zabbix-frontend-php php8.2-pgsql zabbix-nginx-conf zabbix-sql-scripts zabbix-agent zabbix-sender -y
+
+
+echo "############## envio de relatórios ##############"
+
+apt install zabbix-web-service
+
+
+echo "############## Zcat ##############"
+
+# Colocar Ip do banco de dados 
+zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -h 172.31.16.18 -d zabbix -U zabbix -w --password
+
+
+# Caso for instalar o Timescaledb usar
+cat /usr/share/zabbix-sql-scripts/postgresql/timescaledb/schema.sql | psql -h 172.31.16.18 -d zabbix -U zabbix -W
+
+
+
+sed -i 's/^# DBPassword=/DBPassword=1234@Mudar/g' /etc/zabbix/zabbix_server.conf
+
+/etc/zabbix/zabbix_server.conf
+
+
+
+echo "############## Altera PHP timezone ##############"
+nano /etc/zabbix/php-fpm.conf
+
+php_value[date.timezone] = America/Sao_Paulo
+php_value[upload_max_filesize] = 100M
+
+
+# Configurar o Nginx para o Zabbix frontend
+nano /etc/zabbix/nginx.conf
+
+#Realizar as seguintes alterações: 
+        listen          8080;
+        listen [::]:8080;
+        server_name     172.31.16.18;
+		
+
+# Configurar o PHP para o Zabbix frontend
+
+sed -i "s/max_execution_time = 30/max_execution_time = 300/" /etc/php/8.2/fpm/php.ini
+sed -i "s/memory_limit = 128M/memory_limit = 256M/" /etc/php/8.2/fpm/php.ini
+sed -i "s/post_max_size = 8M/post_max_size = 16M/" /etc/php/8.2/fpm/php.ini
+sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 16M/" /etc/php/8.2/fpm/php.ini
+sed -i "s/;date.timezone =/date.timezone = UTC/" /etc/php/8.2/fpm/php.ini
+
+
+echo "############## Instalando Locale do Zabbix ##############"
+locale-gen en_US.UTF-8
+dpkg-reconfigure locales
+en_US.utf8
+
+
+
+#Inicia Zabbix Server agente e processos
+echo "############## Inicia Zabbix Server agente e processos ##############"
+
+systemctl enable --now zabbix-server zabbix-agent nginx php8.2-fpm
+systemctl restart zabbix-server zabbix-agent nginx php8.2-fpm
+

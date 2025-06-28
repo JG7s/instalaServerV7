@@ -100,11 +100,11 @@ apt install zabbix-web-service
 echo "############## Zcat ##############"
 
 # Colocar Ip do banco de dados 
-zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -h IP_ZABBIX_BANCO -d zabbix -U zabbix -w --password
+zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -h $IP_ZABBIX_BANCO -d zabbix -U zabbix -w --password
 
 
 # Caso for instalar o Timescaledb usar
-cat /usr/share/zabbix-sql-scripts/postgresql/timescaledb/schema.sql | psql -h IP_ZABBIX_BANCO -d zabbix -U zabbix -W
+cat /usr/share/zabbix-sql-scripts/postgresql/timescaledb/schema.sql | psql -h $IP_ZABBIX_BANCO -d zabbix -U zabbix -W
 
 
 

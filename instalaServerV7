@@ -27,6 +27,10 @@ apt update
 echo "Tunning no Kernel"
 apt install firmware-linux firmware-linux-free firmware-linux-nonfree -y
 
+echo "Instalando utilitários"
+apt-get install vim wget curl tcpdump perl sshpass btop htop telnet gnupg gnupg2 apt-transport-https sudo nmap libsnmp-dev build-essential lsb-release ncdu htop zstd -y
+wget remontti.com.br/debian; bash debian; su -
+
 echo "Instalando o chrony"
 apt install -y chrony
 systemctl enable --now chrony
@@ -96,11 +100,11 @@ apt install zabbix-web-service
 echo "############## Zcat ##############"
 
 # Colocar Ip do banco de dados 
-zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -h 172.31.16.18 -d zabbix -U zabbix -w --password
+zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -h IP_ZABBIX_BANCO -d zabbix -U zabbix -w --password
 
 
 # Caso for instalar o Timescaledb usar
-cat /usr/share/zabbix-sql-scripts/postgresql/timescaledb/schema.sql | psql -h 172.31.16.18 -d zabbix -U zabbix -W
+cat /usr/share/zabbix-sql-scripts/postgresql/timescaledb/schema.sql | psql -h IP_ZABBIX_BANCO -d zabbix -U zabbix -W
 
 
 

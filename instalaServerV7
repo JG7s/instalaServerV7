@@ -39,11 +39,10 @@ systemctl start chronyd
 #timedatectl set-timezone America/Manaus
 
 apt-get install vim wget curl tcpdump perl sshpass telnet gnupg gnupg2 apt-transport-https sudo nmap snmpd snmp snmptrapd libsnmp-perl perl libxml-simple-perl snmp-mibs-downloader python3-pip libsnmp-dev build-essential bash-completion htop traceroute software-properties-common expect fping -y
-wget remontti.com.br/debian; bash debian; su -
+
 
 apt update
 
-reboot
 
 ### Precisa instalar o agente do PostegreeSQL zabbix server
 

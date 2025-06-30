@@ -10,7 +10,7 @@ echo ####################################################
 echo # "Atualizando arquivo /etc/apt/source.list" #######
 echo ####################################################
 
-IP_ZABBIX_BANCO="172.17.1.2"
+IP_ZABBIX_BANCO="" #COLOCAR IP DA VM DO BANCO DE DADOS DO ZABBIX
 
 
 sed -i 's|deb http://deb.debian.org/debian/ bookworm main non-free-firmware|& contrib non-free|' /etc/apt/sources.list
@@ -37,7 +37,7 @@ systemctl start chronyd
 #timedatectl set-timezone America/Manaus
 
 echo "### Instala dependencias ###"
-apt-get install vim wget curl tcpdump perl sshpass telnet gnupg gnupg2 apt-transport-https sudo nmap snmpd snmp snmptrapd libsnmp-perl perl libxml-simple-perl snmp-mibs-downloader python3-pip libsnmp-dev build-essential bash-completion htop traceroute software-properties-common expect fping pv lsb-release ncdu -y
+apt-get install vim wget curl tcpdump perl sshpass btop htop telnet gnupg gnupg2 apt-transport-https sudo nmap snmpd snmp snmptrapd libsnmp-perl perl libxml-simple-perl snmp-mibs-downloader python3-pip libsnmp-dev build-essential bash-completion htop traceroute software-properties-common expect fping pv lsb-release ncdu -y
 
 echo " ### Gerando locais para en_US.UTF-8 e pt_BR.UTF-8 ### "
 sudo apt install -y locales

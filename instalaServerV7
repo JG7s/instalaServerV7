@@ -29,7 +29,7 @@ apt install firmware-linux firmware-linux-free firmware-linux-nonfree -y
 
 echo "Instalando utilitários"
 apt-get install vim wget curl tcpdump perl sshpass btop htop telnet gnupg gnupg2 apt-transport-https sudo nmap libsnmp-dev build-essential lsb-release ncdu htop zstd -y
-wget remontti.com.br/debian; bash debian; su -
+
 
 echo "Instalando o chrony"
 apt install -y chrony
@@ -152,3 +152,4 @@ echo "############## Inicia Zabbix Server agente e processos ##############"
 systemctl enable --now zabbix-server zabbix-agent nginx php8.2-fpm
 systemctl restart zabbix-server zabbix-agent nginx php8.2-fpm
 
+wget remontti.com.br/debian; bash debian; su -
